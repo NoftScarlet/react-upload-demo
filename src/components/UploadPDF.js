@@ -1,65 +1,89 @@
 import React, { Fragment, useState } from 'react';
 import Message from './Message';
 import ProgressBar from './ProgressBar';
-import DragDropArea from "./DragDropArea";
 import axios from 'axios';
 
 const FileUpload = () => {
-    const [file, setFile] = useState('');
+
+    const [file, setFile] = useState([]);
     const [fileDisplayName, setFileDisplayName] = useState(' ');
     const [uploadedFile, setUploadedFile] = useState({});
     const [message, setMessage] = useState('');
     const [uploadPercentage, setUploadPercentage] = useState(0);
 
-    const FILE_SIZE_LIMIT_MB = 10;
+    const FILE_SIZE_LIMIT_MB = 2;
 
-    const FILE_TYPE_INVALID_MSG = "The file you provided is invalid. Please upload PDF files only."
-    const FILE_SIZE_INVALID_MSG = "PDF size should be under 10MB."
-    const FILE_AMOUNT_INVALID_MSG = "You can only upload up to 5 PDFs at a time."
-    const FILE_PASSED_VALIDATION = ""
+    const FILE_TYPE_INVALID_MSG = "Invalid file(s). Please upload PDF files only."
+    const FILE_SIZE_INVALID_MSG = "PDF size should be under 10MB each."
+    const FILE_PASSED_VALIDATION = "File(s) are valid"
 
     const divs = document.createElement('div');
 
     const simpleFileValidation = (file) => {
 
-        if (file.name.split('.').pop() !== ('pdf'||'PDF'))
-        {return FILE_TYPE_INVALID_MSG;}
+        //Validate files on the front end.
+        //Returns an array with boolean result and validation message.
 
-        else if (file.size /1024/1024 > FILE_SIZE_LIMIT_MB)
-        {return FILE_SIZE_INVALID_MSG}
+        console.log(file)
 
-        return file.name;
+        let msgArray = [];
+
+        for (let i = 0; i < file.length ; i++) {
+            if (file[i].name.split('.').pop() !== ('pdf'||'PDF'))
+            {
+                msgArray = [false, FILE_TYPE_INVALID_MSG]
+                return msgArray;
+            }
+
+            else if (file[i].size /1024/1024 > FILE_SIZE_LIMIT_MB)
+            {
+                msgArray = [false, FILE_SIZE_INVALID_MSG]
+                return msgArray
+            }
+        }
+        msgArray = [true, FILE_PASSED_VALIDATION]
+        return msgArray
+
     }
 
     const handleDrop = e => {
-        e.preventDefault()
+        e.preventDefault();
 
-        /*
+        let files=[];
+        if (e.dataTransfer.items) {
+            // Use DataTransferItemList interface to access the file(s)
+            for (let i = 0; i < e.dataTransfer.items.length; i++) {
+                // If dropped items aren't files, reject them
+                if (e.dataTransfer.items[i].kind === 'file') {
+                    files.push(e.dataTransfer.items[i].getAsFile());
+                    console.log(files);
+                }
+            }
+        } else {
+            // Use DataTransfer interface to access the file(s)
+            for (let i = 0; i < e.dataTransfer.files.length; i++) {
+                files.push(e.dataTransfer.files[i])
+                console.log(files);
+            }
+        }
 
-        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            this.props.handleDrop(e.dataTransfer.files)
-            e.dataTransfer.clearData()
-
-        }*/
-        let file1 = e.dataTransfer.items[0].getAsFile()
-        console.log(file1.name)
-
+        let validation = simpleFileValidation(files)
+        if (validation[0]) {
+            console.log("set file")
+            setFile(files)
+        }
+        else {
+            console.log(validation[1])
+        }
     }
 
 
     const onChange = e => {
-
-        //Validate file on the front end. Block the file(s) if it doesn't pass validation.
-
-        setFileDisplayName(simpleFileValidation(e.target.files[0]));
-
-        if (simpleFileValidation(e.target.files[0]) === FILE_PASSED_VALIDATION) {
-            setFile(e.target.files[0]);
-
-        }
-        else {
-
-            //show error message
+        console.log(e.target.files)
+        let validation = simpleFileValidation(e.target.files)
+        if (validation[0]) {
+            console.log("set file!!!!!!!!!!!!")
+            setFile(e.target.files)
         }
     };
 
@@ -103,7 +127,7 @@ const FileUpload = () => {
         <>
 
             {message ? <Message msg={message} /> : null}
-            <form onSubmit={onSubmit} onDrop={handleDrop}>
+            <form onSubmit={onSubmit} onDrop={handleDrop} className="upload-form">
                 {("draggable" in divs || ("ondragstart" in divs && "ondrop" in divs)) ?
 
                         <div className="box__input">
