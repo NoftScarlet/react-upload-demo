@@ -11,34 +11,37 @@ const FileUpload = () => {
     const [message, setMessage] = useState('');
     const [uploadPercentage, setUploadPercentage] = useState(0);
 
+    const FILE_TYPE_LIMIT = 'pdf';
     const FILE_SIZE_LIMIT_MB = 2;
+    const FILE_AMOUNT_LIMIT = 5;
 
     const FILE_TYPE_INVALID_MSG = "Invalid file(s). Please upload PDF files only."
     const FILE_SIZE_INVALID_MSG = "PDF size should be under 10MB each."
+    const FILE_AMOUNT_INVALID_MSG = "You can only upload up to 5 PDFs"
     const FILE_PASSED_VALIDATION = "File(s) are valid"
 
     const divs = document.createElement('div');
 
     const simpleFileValidation = (file) => {
-
         //Validate files on the front end.
         //Returns an array with boolean result and validation message.
-
         console.log(file)
 
         let msgArray = [];
 
+        if (file.length > FILE_AMOUNT_LIMIT) {
+            return [false, FILE_AMOUNT_INVALID_MSG]
+        }
+
         for (let i = 0; i < file.length ; i++) {
-            if (file[i].name.split('.').pop() !== ('pdf'||'PDF'))
+            if (file[i].name.split('.').pop().toLowerCase() !== FILE_TYPE_LIMIT)
             {
-                msgArray = [false, FILE_TYPE_INVALID_MSG]
-                return msgArray;
+                return [false, FILE_TYPE_INVALID_MSG];
             }
 
             else if (file[i].size /1024/1024 > FILE_SIZE_LIMIT_MB)
             {
-                msgArray = [false, FILE_SIZE_INVALID_MSG]
-                return msgArray
+                return [false, FILE_SIZE_INVALID_MSG]
             }
         }
         msgArray = [true, FILE_PASSED_VALIDATION]
@@ -46,7 +49,25 @@ const FileUpload = () => {
 
     }
 
+    const handleDragOver =e=>{
+        e.preventDefault()
+        e.stopPropagation()
+    }
+
+
+
+    const handleDragEnter =e=>{
+        e.preventDefault()
+        console.log("enter")
+    }
+
+    const handleDragLeave =e=> {
+        e.preventDefault()
+        console.log ("leave")
+    }
+
     const handleDrop = e => {
+        console.log("handle Dr")
         e.preventDefault();
 
         let files=[];
@@ -84,6 +105,9 @@ const FileUpload = () => {
         if (validation[0]) {
             console.log("set file!!!!!!!!!!!!")
             setFile(e.target.files)
+        }
+        else {
+            console.log(validation[1])
         }
     };
 
@@ -127,38 +151,34 @@ const FileUpload = () => {
         <>
 
             {message ? <Message msg={message} /> : null}
-            <form onSubmit={onSubmit} onDrop={handleDrop} className="upload-form">
-                {("draggable" in divs || ("ondragstart" in divs && "ondrop" in divs)) ?
 
-                        <div className="box__input">
-                            <input className="box__file" type="file" name="files[]" id="fil "
-                                   data-multiple-caption="{count} files selected" multiple="multiple"/>
-                            <label htmlFor="file"><strong>Choose a file</strong><span className="box__dragndrop"> or drag it here</span>.</label>
-                            <button className="box__button" type="submit">Upload</button>
-                        </div>
+            <div className={"drag-area"} onDragOver={handleDragOver} onDropCapture={handleDrop} onDragEnterCapture={handleDragEnter} onDragLeaveCapture={handleDragLeave}>
+                <form onSubmit={onSubmit}  className="upload-form" >
 
-                    :
-                    <div className='custom-file mb-4'>
-                        <input
-                            type='file'
-                            accept='application/pdf'
-                            className='custom-file-input'
-                            id='customFile'
-                            onChange={onChange}
+                    <div className="pdf_input">
+                        <label htmlFor="files" className="btn">Select Files</label>
+
+                        <input className="pdf_file_select"
+                               accept='application/pdf'
+                               type="file"
+                               name="files[]"
+                               id="files"
+                               multiple="multiple"
+                               onChange={onChange}
+                               style={{width:"0px"}}
                         />
-                        <label className='custom-file-label' htmlFor='customFile'>
-                            {fileDisplayName}
-                        </label>
-                    </div>
-                }
-                <ProgressBar percentage={uploadPercentage} />
+                            { ("draggable" in divs || ("ondragstart" in divs && "ondrop" in divs))
+                                ?
 
-                <input
-                    type='submit'
-                    value='Upload'
-                    className='btn btn-primary btn-block mt-4'
-                />
-            </form>
+                                <div className="pdf_dragndrop"> Or drag n drop here</div>
+                                :
+                                ''
+                            }
+
+                        <button className="pdf_button" type="submit" value='Upload'>Upload</button>
+                    </div>
+                </form>
+            </div>
 
             {uploadedFile ? (
                 <div className='row mt-5'>
