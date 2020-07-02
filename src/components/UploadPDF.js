@@ -1,60 +1,73 @@
-import React, { Fragment, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import Message from './Message';
-import ProgressBar from './ProgressBar';
-import axios from 'axios';
+import * as STATIC_V from '../static/StaticValuesPDF';
+import {simpleFileValidation} from '../static/utility';
+import * as pdfjsLib from 'pdfjs-dist'
+import axios from 'axios'
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.4.456/pdf.worker.js';
+
+
+let url = require("../static/helloworld.pdf")
+
+var loadingTask = pdfjsLib.getDocument(url);
+loadingTask.promise.then(function(pdf) {
+    console.log('PDF loaded');
+
+    // Fetch the first page
+    var pageNumber = 1;
+    pdf.getPage(pageNumber).then(function(page) {
+        console.log('Page loaded');
+
+        var scale = 1.5;
+        var viewport = page.getViewport({scale: scale});
+
+        // Prepare canvas using PDF page dimensions
+        var canvas = document.getElementById('the-canvas');
+        var context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        // Render PDF page into canvas context
+        var renderContext = {
+            canvasContext: context,
+            viewport: viewport
+        };
+        var renderTask = page.render(renderContext);
+        renderTask.promise.then(function () {
+            console.log('Page rendered');
+        });
+    });
+}, function (reason) {
+    // PDF loading error
+    console.error(reason);
+});
+
 
 const FileUpload = () => {
 
     const [file, setFile] = useState([]);
-    const [fileDisplayName, setFileDisplayName] = useState(' ');
+    const [fileDisplayNames, setFileDisplayNames] = useState([]);
     const [uploadedFile, setUploadedFile] = useState({});
     const [message, setMessage] = useState('');
     const [uploadPercentage, setUploadPercentage] = useState(0);
-
-    const FILE_TYPE_LIMIT = 'pdf';
-    const FILE_SIZE_LIMIT_MB = 2;
-    const FILE_AMOUNT_LIMIT = 5;
-
-    const FILE_TYPE_INVALID_MSG = "Invalid file(s). Please upload PDF files only."
-    const FILE_SIZE_INVALID_MSG = "PDF size should be under 10MB each."
-    const FILE_AMOUNT_INVALID_MSG = "You can only upload up to 5 PDFs"
-    const FILE_PASSED_VALIDATION = "File(s) are valid"
-
     const divs = document.createElement('div');
 
-    const simpleFileValidation = (file) => {
-        //Validate files on the front end.
-        //Returns an array with boolean result and validation message.
-        console.log(file)
-
-        let msgArray = [];
-
-        if (file.length > FILE_AMOUNT_LIMIT) {
-            return [false, FILE_AMOUNT_INVALID_MSG]
+    const prepareFiles = (files) => {
+        setFile(files)
+        for (let i = 0; i < files.length ; i++) {
+            setFileDisplayNames([...fileDisplayNames, files[i].name])
         }
-
-        for (let i = 0; i < file.length ; i++) {
-            if (file[i].name.split('.').pop().toLowerCase() !== FILE_TYPE_LIMIT)
-            {
-                return [false, FILE_TYPE_INVALID_MSG];
-            }
-
-            else if (file[i].size /1024/1024 > FILE_SIZE_LIMIT_MB)
-            {
-                return [false, FILE_SIZE_INVALID_MSG]
-            }
-        }
-        msgArray = [true, FILE_PASSED_VALIDATION]
-        return msgArray
+        console.log(fileDisplayNames)
 
     }
 
+    /*   */
+    //Drag and drop event handling definition
     const handleDragOver =e=>{
         e.preventDefault()
         e.stopPropagation()
     }
-
-
 
     const handleDragEnter =e=>{
         e.preventDefault()
@@ -67,47 +80,48 @@ const FileUpload = () => {
     }
 
     const handleDrop = e => {
-        console.log("handle Dr")
+        console.log("handle Drop")
         e.preventDefault();
-
         let files=[];
+
         if (e.dataTransfer.items) {
             // Use DataTransferItemList interface to access the file(s)
             for (let i = 0; i < e.dataTransfer.items.length; i++) {
                 // If dropped items aren't files, reject them
                 if (e.dataTransfer.items[i].kind === 'file') {
                     files.push(e.dataTransfer.items[i].getAsFile());
-                    console.log(files);
+
                 }
             }
         } else {
             // Use DataTransfer interface to access the file(s)
             for (let i = 0; i < e.dataTransfer.files.length; i++) {
                 files.push(e.dataTransfer.files[i])
-                console.log(files);
+
             }
         }
 
-        let validation = simpleFileValidation(files)
-        if (validation[0]) {
+        let validation = simpleFileValidation(files, STATIC_V)
+        if (validation.validationResult) {
             console.log("set file")
             setFile(files)
+            setFileDisplayNames(files)
         }
         else {
-            console.log(validation[1])
+            console.log(validation.validationMessage)
         }
     }
 
 
+
     const onChange = e => {
-        console.log(e.target.files)
-        let validation = simpleFileValidation(e.target.files)
-        if (validation[0]) {
-            console.log("set file!!!!!!!!!!!!")
-            setFile(e.target.files)
+
+        let validation = simpleFileValidation(e.target.files, STATIC_V)
+        if (validation.validationResult) {
+            prepareFiles(e.target.files)
         }
         else {
-            console.log(validation[1])
+            console.log(validation.validationMessage)
         }
     };
 
@@ -147,8 +161,16 @@ const FileUpload = () => {
         }
     };
 
+    useEffect(() => {
+
+    });
+
     return (
+
         <>
+            <h1>PDF.js 'Hello, world!' example</h1>
+
+            <canvas id="the-canvas"> </canvas>
 
             {message ? <Message msg={message} /> : null}
 
@@ -179,6 +201,7 @@ const FileUpload = () => {
                     </div>
                 </form>
             </div>
+            <Message msg={fileDisplayNames} />
 
             {uploadedFile ? (
                 <div className='row mt-5'>
@@ -194,5 +217,7 @@ const FileUpload = () => {
         </>
     );
 };
-
+{/*// eslint-disable-next-line import/no-webpack-loader-syntax
+//import PDFJSWorker from "worker-loader!pdfjs-dist/build/pdf.worker.js";
+//pdfjsLib.GlobalWorkerOptions.workerPort = new PDFJSWorker();*/}
 export default FileUpload;
