@@ -1,64 +1,150 @@
-import React, {useEffect, useState} from 'react';
+import React, {FC, useEffect, useState} from 'react';
 import Message from './Message';
 import * as STATIC_V from '../static/StaticValuesPDF';
 import {simpleFileValidation} from '../static/utility';
-import * as pdfjsLib from 'pdfjs-dist'
+import * as pdfjsLib from 'pdfjs-dist/es5/build/pdf'
 import axios from 'axios'
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.4.456/pdf.worker.js';
+import { ReactSortable } from "react-sortablejs";
 
+pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdn.jsdelivr.net/npm/pdfjs-dist@2.4.456/es5/build/pdf.worker.js';
+
+
+const pdfData = [
+
+    { id: 1, docuName: "xyz.pdf", roationDeg:0, pageNumOfThisDoc:1 },
+    { id: 2, name: "fiona" },
+    { id: 3, name: "asfasf" },
+    { id: 4, name: "fio3333na" },
+    { id: 5, name: "fioddna" },
+    { id: 6, name: "fion3t4a" },
+
+]
+
+
+//https://jsfiddle.net/95031khg/1/
+//USE es5 build with IE
+
+//https://codesandbox.io/s/99v0ebpy?file=/Container.js
+//https://codepen.io/fitri/pen/VbrZQm
+
+
+//https://medium.com/@deepakkadarivel/drag-and-drop-dnd-for-mobile-browsers-fc9bcd1ad3c5 mobile drag drop
 
 let url = require("../static/helloworld.pdf")
+let url2 = require ("../static/HFC3BD44E.pdf")
+let url3 = require ("../static/50-pages.pdf")
 
-var loadingTask = pdfjsLib.getDocument(url);
-loadingTask.promise.then(function(pdf) {
-    console.log('PDF loaded');
+const PDFRender = props => {
+    const [state, setState] = useState([props.pageData]);
 
-    // Fetch the first page
-    var pageNumber = 1;
-    pdf.getPage(pageNumber).then(function(page) {
-        console.log('Page loaded');
+    return (
+        <div className={"col"}>
+            <ReactSortable list={state} setList={setState} >
+                {state.map(doc =>{
+                    let canvases = []
+                    for (let i=0;i<doc.pageCount;i++) {
+                        canvases.push(
+                            <div key={doc.fingerprint +"-"+i} className={"grid-square"}>
+                                <canvas id={`canvas-${doc.filename}-${doc.fingerprint}-${i}`} />
+                            </div>)
+                    }
+                    return canvases
+                })}
 
-        var scale = 1.5;
-        var viewport = page.getViewport({scale: scale});
-
-        // Prepare canvas using PDF page dimensions
-        var canvas = document.getElementById('the-canvas');
-        var context = canvas.getContext('2d');
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        // Render PDF page into canvas context
-        var renderContext = {
-            canvasContext: context,
-            viewport: viewport
-        };
-        var renderTask = page.render(renderContext);
-        renderTask.promise.then(function () {
-            console.log('Page rendered');
-        });
-    });
-}, function (reason) {
-    // PDF loading error
-    console.error(reason);
-});
-
+            </ReactSortable>
+        </div>
+    );
+};
 
 const FileUpload = () => {
 
-    const [file, setFile] = useState([]);
-    const [fileDisplayNames, setFileDisplayNames] = useState([]);
-    const [uploadedFile, setUploadedFile] = useState({});
-    const [message, setMessage] = useState('');
-    const [uploadPercentage, setUploadPercentage] = useState(0);
     const divs = document.createElement('div');
 
-    const prepareFiles = (files) => {
-        setFile(files)
-        for (let i = 0; i < files.length ; i++) {
-            setFileDisplayNames([...fileDisplayNames, files[i].name])
+    const [file, setFile] = useState([]);
+    const [pages, setPages] = useState([]);
+    const [fileDisplayNames, setFileDisplayNames] = useState([]);
+    const [message, setMessage] = useState('');
+
+    useEffect(()=>{
+        console.log(pages)
+    })
+
+
+    const renderIntoCanvas =  async (docFiles) => {
+        console.log("render into canveas")
+
+         function prepareDataForCanvas (singleFile, singleFileName) {
+             let fileReader = new FileReader();
+             fileReader.onload =  async function() {
+                 let typedArray = new Uint8Array(this.result);
+                 const c = await pdfjsLib.getDocument(typedArray).promise
+                     .then(function(pdfDoc) {
+                     return {
+                         pageCount: pdfDoc._pdfInfo.numPages,
+                         fingerprint: pdfDoc._pdfInfo.fingerprint,
+                         fileName:singleFileName
+                     }
+                 });
+                 console.log(c)
+
+             }
+             fileReader.readAsArrayBuffer(singleFile);
+
         }
-        console.log(fileDisplayNames)
+
+         function renderPages(singleFile) {
+             let fileReader = new FileReader();
+             fileReader.onload =  function() {
+                 let typedArray = new Uint8Array(this.result);
+                 const loadingTask = pdfjsLib.getDocument(typedArray);
+                 loadingTask.promise.then(function(pdfDoc) {
+                     for(let i = 1; i <= pdfDoc.numPages; i++) {
+                         pdfDoc.getPage(i).then(renderPage);
+                     }
+                 });
+             }
+             fileReader.readAsArrayBuffer(singleFile);
+        }
+
+        function renderPage(page) {
+
+            console.log("pbifas")
+
+            /*
+            let scale = 0.4;
+            let viewport = page.getViewport({scale: scale});
+
+
+            let canvas = document.getElementById(page.name );
+            let context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            // Render PDF page into canvas context
+            let renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            let renderTask = page.render(renderContext);
+            renderTask.promise.then(function () {
+                console.log('Page rendered');
+            });*/
+
+        }
+
+
+
+        const exec =  (docFiles) =>{
+            for(let i = 0; i < docFiles.length; i++) {
+                prepareDataForCanvas(docFiles[i])
+            }
+
+            //for(let i = 1; i <= docFiles.length; i++) {
+                // renderPages(docFiles[i])
+          //  }
+        }
+        exec(docFiles)
 
     }
 
@@ -103,22 +189,29 @@ const FileUpload = () => {
 
         let validation = simpleFileValidation(files, STATIC_V)
         if (validation.validationResult) {
-            console.log("set file")
-            setFile(files)
-            setFileDisplayNames(files)
+            let names=[];
+            for (let i = 0; i < files.length ; i++) {
+                names.push(files[i].name)
+            }
+            setFileDisplayNames([...fileDisplayNames, ...names])
+            renderIntoCanvas(files)
         }
         else {
             console.log(validation.validationMessage)
         }
     }
 
-
-
     const onChange = e => {
 
-        let validation = simpleFileValidation(e.target.files, STATIC_V)
+        let files =  [...e.target.files]; //Loading
+        let validation = simpleFileValidation(files, STATIC_V)
         if (validation.validationResult) {
-            prepareFiles(e.target.files)
+            let names=[];
+            for (let i = 0; i < files.length ; i++) {
+                names.push(files[i].name)
+            }
+            setFileDisplayNames([...fileDisplayNames, ...names])
+            renderIntoCanvas(files)
         }
         else {
             console.log(validation.validationMessage)
@@ -129,50 +222,15 @@ const FileUpload = () => {
         evt.preventDefault();
         const formData = new FormData();
         formData.append('file', file);
-
-        try {
-            const res = await axios.post('/upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                },
-                onUploadProgress: progressEvent => {
-                    setUploadPercentage(
-                        parseInt(
-                            Math.round((progressEvent.loaded * 100) / progressEvent.total)
-                        )
-                    );
-
-                    // Clear percentage
-                    setTimeout(() => setUploadPercentage(0), 10000);
-                }
-            });
-
-            const { fileDisplayName, filePath } = res.data;
-
-            setUploadedFile({ fileDisplayName, filePath });
-
-            setMessage('File Uploaded');
-        } catch (err) {
-            if (err.response.status === 500) {
-                setMessage('There was a problem with the server');
-            } else {
-                setMessage(err.response.data.msg);
-            }
-        }
     };
 
-    useEffect(() => {
-
-    });
 
     return (
 
         <>
-            <h1>PDF.js 'Hello, world!' example</h1>
+            {pages ? <PDFRender pageData={pages}/> : null}
 
-            <canvas id="the-canvas"> </canvas>
-
-            {message ? <Message msg={message} /> : null}
+            <h1>Yixiao's React-PDF Assignment 🚀</h1>
 
             <div className={"drag-area"} onDragOver={handleDragOver} onDropCapture={handleDrop} onDragEnterCapture={handleDragEnter} onDragLeaveCapture={handleDragLeave}>
                 <form onSubmit={onSubmit}  className="upload-form" >
@@ -201,18 +259,8 @@ const FileUpload = () => {
                     </div>
                 </form>
             </div>
+            <br />
             <Message msg={fileDisplayNames} />
-
-            {uploadedFile ? (
-                <div className='row mt-5'>
-                    <div className='col-md-6 m-auto'>
-                        <h3 className='text-center'>{uploadedFile.fileDisplayName}</h3>
-                        <img style={{ width: '100%' }} src={uploadedFile.filePath} alt='' />
-                    </div>
-                </div>
-            ) : null}
-
-
 
         </>
     );

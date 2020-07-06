@@ -1,8 +1,6 @@
 /* _ */
 //Simple front end validation. Returns an object with boolean result and validation message
 export const simpleFileValidation = (files, STATIC_V) => {
-    console.log(files)
-
 
     //check amount of files
     if (files.length > STATIC_V.FILE_AMOUNT_LIMIT) {
