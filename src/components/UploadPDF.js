@@ -57,6 +57,8 @@ const PDFRender = props => {
     );
 };
 
+const arr =[]
+
 const FileUpload = () => {
 
     const divs = document.createElement('div');
@@ -74,6 +76,12 @@ const FileUpload = () => {
     const renderIntoCanvas =  async (docFiles) => {
         console.log("render into canveas")
 
+
+        function aler (x) {
+            arr.push(x)
+            console.log(arr)
+        }
+
          function prepareDataForCanvas (singleFile, singleFileName) {
              let fileReader = new FileReader();
              fileReader.onload =  async function() {
@@ -86,8 +94,7 @@ const FileUpload = () => {
                          fileName:singleFileName
                      }
                  });
-                 console.log(c)
-
+                 aler(c)
              }
              fileReader.readAsArrayBuffer(singleFile);
 
