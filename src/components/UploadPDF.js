@@ -1,9 +1,9 @@
-import React, {FC, useEffect, useState} from 'react';
+import React, { useEffect, useState} from 'react';
 import Message from './Message';
 import * as STATIC_V from '../static/StaticValuesPDF';
 import {simpleFileValidation, classSafeStr} from '../static/utility';
 import * as pdfjsLib from 'pdfjs-dist/es5/build/pdf'
-
+import PDFGridRender from "./PDFGridRender";
 import {ReactSortable} from "react-sortablejs";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdn.jsdelivr.net/npm/pdfjs-dist@2.4.456/es5/build/pdf.worker.js';
@@ -13,32 +13,6 @@ const canvasCreationDataBuffer = []
 //USE es5 build with IE
 //https://codesandbox.io/s/99v0ebpy?file=/Container.js
 //https://codepen.io/fitri/pen/VbrZQm
-
-let url = require("../static/helloworld.pdf")
-let url2 = require("../static/HFC3BD44E.pdf")
-let url3 = require("../static/50-pages.pdf")
-
-
-const PDFRender = props => {
-    const [state, setState] = useState([]);
-
-
-    useEffect(()=>{
-        setState(props.pageData)
-    },[props.pageData])
-    return (
-        <div className={"col"}>
-            <ReactSortable list={state} setList={setState}>
-                {state.map(doc => (
-                    <div key={doc.fingerprint + "-" + doc.pageNums} className={"grid-square"}>
-                        <canvas id={`canvas-${doc.fingerprint}-${doc.pageNums}`}>.</canvas>
-                    </div>
-                ))}
-            </ReactSortable>
-        </div>
-    );
-};
-
 
 const FileUpload = () => {
 
@@ -53,22 +27,24 @@ const FileUpload = () => {
         setPages([canvasCreationDataBuffer])
     },[fileDisplayNames])*/
 
-
-
     const renderIntoCanvas = async (docFiles) => {
-        console.log("render into canveas")
+        console.log("render into canvas")
 
-        function saveToBuffer(x) {
+        function createCanvasAttributeData(x) {
+            let dataBuffer = []
             for (let i=0; i<x.pageCount;i++){
-                canvasCreationDataBuffer.push({pageNums:i+1, fingerprint:x.fingerprint,name:x.fileName})
+                dataBuffer.push({
+                    pageNums:i+1, fingerprint:x.fingerprint,name:x.fileName
+                })
             }
+            return dataBuffer
         }
 
         function prepareDataForCanvas(singleFile, singleFileName) {
             let fileReader = new FileReader();
             fileReader.onload = async function () {
                 let typedArray = new Uint8Array(this.result);
-                const c = await pdfjsLib.getDocument(typedArray).promise
+                const pageData = await pdfjsLib.getDocument(typedArray).promise
                     .then(function (pdfDoc) {
                         return {
                             pageCount: pdfDoc._pdfInfo.numPages,
@@ -76,28 +52,31 @@ const FileUpload = () => {
                             fileName: singleFileName
                         }
                     });
-                saveToBuffer(c)
+                setPages(createCanvasAttributeData(pageData))
             }
+
             fileReader.readAsArrayBuffer(singleFile);
         }
 
         function renderPages(singleFile) {
             let fileReader = new FileReader();
-            fileReader.onload = function () {
+            fileReader.onload = async function () {
                 let typedArray = new Uint8Array(this.result);
                 const loadingTask = pdfjsLib.getDocument(typedArray);
                 loadingTask.promise.then(function (pdfDoc) {
-                    for (let i = 1; i <= pdfDoc.numPages; i++) {
-                        pdfDoc.getPage(i).then(renderPage);
+                    for (let i = 0; i < pdfDoc.numPages; i++) {
+                        pdfDoc.getPage(i+1).then(function(_pdfPage){
+                            renderPage(_pdfPage, {pageNum:i+1,fingerprint:pdfDoc._pdfInfo.fingerprint })
+                        });
                     }
                 });
             }
             fileReader.readAsArrayBuffer(singleFile);
         }
 
-        function renderPage(page) {
+        function renderPage(page,canvasAttr) {
 
-            console.log("pbifas")
+            console.log(page,canvasAttr)
 
             /*
             let scale = 0.4;
@@ -219,7 +198,7 @@ const FileUpload = () => {
     return (
 
         <>
-            {pages ? <PDFRender pageData={pages}/> : null}
+            {pages ? <PDFGridRender pageData={pages}/> : null}
 
             <h1>Yixiao's React-PDF Assignment 🚀</h1>
 
