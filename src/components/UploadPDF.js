@@ -21,19 +21,31 @@ const FileUpload = () => {
         let buffer = [];
 
         function prepareDataForCanvas(sf, sfn) {
-            let singleData = []
+            let singlePageData = []
             pdfjsLib.getDocument(sf).promise
                 .then(function (pdfDoc) {
                     for (let i = 0; i < pdfDoc._pdfInfo.numPages; i++) {
-                        singleData.push({
+                        singlePageData.push({
                             pageNum: i + 1,
                             fingerprint: pdfDoc._pdfInfo.fingerprint,
-                            fileName: sfn
+                            fileName: sfn,
+                            rotateDeg: 0,
+                            key: pdfDoc._pdfInfo.fingerprint+'-'+(i + 1)
                         })
                     }
-                    buffer = [...buffer, ...singleData]
+                    buffer = [...buffer, ...singlePageData]
                     setCanvasAttributeData([...canvasAttributeData, ...buffer])
-                });
+                    return pdfDoc
+                })
+                .then(function (pdfDoc) {
+                    for (let i = 0; i < pdfDoc._pdfInfo.numPages; i++) {
+                        pdfDoc.getPage(i + 1).then(function (_pdfPage) {
+                            renderSinglePage(
+                                _pdfPage,
+                                {pageNum: i + 1, fingerprint: pdfDoc._pdfInfo.fingerprint})
+                        });
+                    }
+                })
         }
 
         async function exec(docFiles) {
@@ -49,39 +61,6 @@ const FileUpload = () => {
                 callback(typedArray, singleFileName)
             }
             fileReader.readAsArrayBuffer(singleFile);
-        }
-
-        await exec(docs)
-    }
-
-
-    function renderIntoCanvas (docFiles) {
-        console.log("render into canvas")
-
-        async function exec(docFiles) {
-            for (let i = 0; i < docFiles.length; i++) {
-                convertToUnit8Array(docFiles[i], renderPages)
-            }
-        }
-
-        function convertToUnit8Array(singleFile, callback) {
-            let fileReader = new FileReader();
-            fileReader.onload = function (event) {
-                let typedArray = new Uint8Array(this.result);
-                callback(typedArray)
-            }
-            fileReader.readAsArrayBuffer(singleFile);
-        }
-
-        function renderPages(singleFile) {
-            pdfjsLib.getDocument(singleFile).promise
-                .then(function (pdfDoc) {
-                    for (let i = 0; i < pdfDoc.numPages; i++) {
-                        pdfDoc.getPage(i + 1).then(function (_pdfPage) {
-                            renderSinglePage(_pdfPage, {pageNum: i + 1, fingerprint: pdfDoc._pdfInfo.fingerprint})
-                        });
-                    }
-                });
         }
 
         function renderSinglePage(_page, _canvasAttr) {
@@ -104,7 +83,8 @@ const FileUpload = () => {
                 console.log('Page rendered');
             });
         }
-        exec(docFiles)
+
+        return await exec(docs)
     }
 
     /*   */
@@ -170,7 +150,6 @@ const FileUpload = () => {
             }
             setFileDisplayNames([...fileDisplayNames, ...names])
             createCanvases(files)
-            renderIntoCanvas(files)
         } else {
             console.log(validation.validationMessage)
         }
