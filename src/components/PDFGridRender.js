@@ -3,9 +3,10 @@ import {ReactSortable} from "react-sortablejs";
 import Message from "./Message";
 
 const PDFGridRender = props => {
-    const [state, setState] = useState(props.pageData);
+    let pageAttr = props.pageData
+    const [state, setState] = useState(pageAttr);
 
-    useEffect(()=>{
+   useEffect(()=>{
         setState(props.pageData)
         console.log(props.pageData)
     },[props.pageData])
@@ -14,10 +15,9 @@ const PDFGridRender = props => {
         <div className={"col"}>
             <ReactSortable list={state} setList={setState}>
                 {state.map(doc => (
-
-                    <div key={doc.fingerprint + "-" + doc.pageNums} className={"grid-square"}>
-                        <canvas id={`canvas-${doc.fingerprint}-${doc.pageNums}`}>.</canvas>
-                        <Message msg={doc.name + " -page " + doc.pageNum}/>
+                    <div key={doc.fingerprint + "-" + doc.pageNum} className={"grid-square"}>
+                        <canvas id={`canvas-${doc.fingerprint}-${doc.pageNum}`}>.</canvas>
+                        <Message msg={doc.fileName + " -page " + doc.pageNum}/>
                     </div>
 
                 ))}
