@@ -30,11 +30,11 @@ const FileUpload = () => {
                             fingerprint: pdfDoc._pdfInfo.fingerprint,
                             fileName: sfn,
                             rotateDeg: 0,
-                            key: pdfDoc._pdfInfo.fingerprint+'-'+(i + 1)
+                            key: pdfDoc._pdfInfo.fingerprint+'-'+ (i + 1)
                         })
                     }
-                    buffer = [...buffer, ...singlePageData]
-                    setCanvasAttributeData([...canvasAttributeData, ...buffer])
+                    buffer = [...singlePageData]
+                    setCanvasAttributeData(buffer)
                     return pdfDoc
                 })
                 .then(function (pdfDoc) {

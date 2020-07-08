@@ -5,8 +5,18 @@ import Message from "./Message";
 const PDFGridRender = props => {
     let pageAttr = props.pageData
     const [state, setState] = useState(pageAttr);
-    let stateCopy = []
-    console.log(state)
+    const [deletes, setDeletes] = useState([])
+
+
+    useEffect(()=>{
+        setState([...state, ...props.pageData])
+        console.log(props.pageData)
+    },[props.pageData])
+
+    useEffect(()=>{
+        setState(deletes)
+        console.log(deletes)
+    },[deletes])
 
     const saveDeg = (str) =>{
 
@@ -15,21 +25,21 @@ const PDFGridRender = props => {
 
     const deletePage = (state, key) => {
         //remove from state
-        let newStateArr = state.filter(function (obj) {
+        let arr =[]
+        arr = state.filter(function (obj) {
             return obj.key !== key
         })
-        console.log(newStateArr)
-        //return newStateArr
+        setDeletes(arr)
+
     }
 
     const mergeData = () =>{
 
     }
 
-   useEffect(()=>{
-        setState(props.pageData)
-        console.log(props.pageData)
-    },[props.pageData])
+    const reRender =() => {
+
+    }
 
     return (
         <div className={"col"}>
