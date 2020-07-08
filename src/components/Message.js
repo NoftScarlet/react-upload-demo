@@ -1,13 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const Message = ( props ) => {
+const Message = (props) => {
     return (
         <>
             {
-                props.msg.map(text=>(
-                    <div>{text}</div>
-                ))
+                <div>{props.msg}</div>
             }
         </>
     );

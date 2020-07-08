@@ -1,43 +1,71 @@
-import React, { useEffect, useState} from 'react';
-import Message from './Message';
-import * as STATIC_V from '../static/StaticValuesPDF';
+import React, {useEffect, useState} from 'react';
 import {simpleFileValidation, classSafeStr} from '../static/utility';
+import * as STATIC_V from '../static/StaticValuesPDF';
 import * as pdfjsLib from 'pdfjs-dist/es5/build/pdf'
 import PDFGridRender from "./PDFGridRender";
-import {ReactSortable} from "react-sortablejs";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdn.jsdelivr.net/npm/pdfjs-dist@2.4.456/es5/build/pdf.worker.js';
-const canvasCreationDataBuffer = []
-
-//https://jsfiddle.net/95031khg/1/
-//USE es5 build with IE
-//https://codesandbox.io/s/99v0ebpy?file=/Container.js
-//https://codepen.io/fitri/pen/VbrZQm
 
 const FileUpload = () => {
 
     const divs = document.createElement('div');
-
     const [file, setFile] = useState([]);
-    const [pages, setPages] = useState([]);
+    const [canvasAttributeData, setCanvasAttributeData] = useState([]);
     const [fileDisplayNames, setFileDisplayNames] = useState([]);
-    const [message, setMessage] = useState('');
+    useEffect(() => {
+    })
 
-  /*  useEffect(()=>{
-        setPages([canvasCreationDataBuffer])
-    },[fileDisplayNames])*/
+
+    const createCanvases = async (docs) => {
+        let buffer =[];
+        function prepareDataForCanvas(sf,sfn) {
+            let singleData =[]
+            pdfjsLib.getDocument(sf).promise
+                .then(function (pdfDoc) {
+                    for (let i = 0; i < pdfDoc._pdfInfo.numPages; i++) {
+                        singleData.push({
+                            pageNum: i + 1,
+                            fingerprint: pdfDoc._pdfInfo.fingerprint,
+                            fileName: sfn
+                        })
+                    }
+                    buffer = [...buffer,...singleData]
+                    console.log(buffer)
+                });
+        }
+
+        console.log("Create canvases")
+        async function exec(docFiles) {
+            for (let i = 0; i < docFiles.length; i++) {
+                convertToUnit8Array(docFiles[i], docFiles[i].name, prepareDataForCanvas)
+            }
+            //<PDFGridRender pageData={canvasAttributeData}/>
+        }
+
+        function convertToUnit8Array(singleFile, singleFileName, callback) {
+            let fileReader = new FileReader();
+            fileReader.onload = function (event) {
+                let typedArray = new Uint8Array(this.result);
+                callback(typedArray, singleFileName)
+            }
+            fileReader.readAsArrayBuffer(singleFile);
+        }
+        await exec(docs)
+        console.log(buffer)
+    }
+
+
 
     const renderIntoCanvas = async (docFiles) => {
         console.log("render into canvas")
 
         function createCanvasAttributeData(x) {
             let dataBuffer = []
-            for (let i=0; i<x.pageCount;i++){
+            for (let i = 0; i < x.pageCount; i++) {
                 dataBuffer.push({
-                    pageNums:i+1, fingerprint:x.fingerprint,name:x.fileName
+                    pageNums: i + 1, fingerprint: x.fingerprint, name: x.fileName
                 })
             }
-            return dataBuffer
         }
 
         function prepareDataForCanvas(singleFile, singleFileName) {
@@ -52,21 +80,21 @@ const FileUpload = () => {
                             fileName: singleFileName
                         }
                     });
-                setPages(createCanvasAttributeData(pageData))
+                console.log(pageData)
+                createCanvasAttributeData(pageData)
             }
-
             fileReader.readAsArrayBuffer(singleFile);
         }
 
-        function renderPages(singleFile) {
+        function renderPages(singleFile, callback) {
             let fileReader = new FileReader();
             fileReader.onload = async function () {
                 let typedArray = new Uint8Array(this.result);
                 const loadingTask = pdfjsLib.getDocument(typedArray);
                 loadingTask.promise.then(function (pdfDoc) {
                     for (let i = 0; i < pdfDoc.numPages; i++) {
-                        pdfDoc.getPage(i+1).then(function(_pdfPage){
-                            renderPage(_pdfPage, {pageNum:i+1,fingerprint:pdfDoc._pdfInfo.fingerprint })
+                        pdfDoc.getPage(i + 1).then(function (_pdfPage) {
+                            renderPage(_pdfPage, {pageNum: i + 1, fingerprint: pdfDoc._pdfInfo.fingerprint})
                         });
                     }
                 });
@@ -74,15 +102,13 @@ const FileUpload = () => {
             fileReader.readAsArrayBuffer(singleFile);
         }
 
-        function renderPage(page,canvasAttr) {
-
-            console.log(page,canvasAttr)
+        function renderPage(_page, _canvasAttr) {
+            console.log(canvasAttributeData)
+            console.log(_page, _canvasAttr)
 
             /*
             let scale = 0.4;
             let viewport = page.getViewport({scale: scale});
-
-
             let canvas = document.getElementById(page.name );
             let context = canvas.getContext('2d');
             canvas.height = viewport.height;
@@ -97,27 +123,21 @@ const FileUpload = () => {
             renderTask.promise.then(function () {
                 console.log('Page rendered');
             });*/
-
         }
-
 
         const exec = (docFiles) => {
             for (let i = 0; i < docFiles.length; i++) {
-                prepareDataForCanvas(docFiles[i],docFiles[i].name)
+                prepareDataForCanvas(docFiles[i], docFiles[i].name)
             }
-            setPages(canvasCreationDataBuffer)
-            for (let i=0;i<docFiles.length;i++) {
+            //setCanvasAttributeData(canvasCreationDataBuffer)
+            for (let i = 0; i < docFiles.length; i++) {
                 renderPages(docFiles[i])
             }
-
-
-
             //for(let i = 1; i <= docFiles.length; i++) {
             // renderPages(docFiles[i])
             //  }
         }
         exec(docFiles)
-
     }
 
     /*   */
@@ -166,7 +186,7 @@ const FileUpload = () => {
                 names.push(files[i].name)
             }
             setFileDisplayNames([...fileDisplayNames, ...names])
-            renderIntoCanvas(files)
+            createCanvases(files)
         } else {
             console.log(validation.validationMessage)
         }
@@ -182,7 +202,7 @@ const FileUpload = () => {
                 names.push(files[i].name)
             }
             setFileDisplayNames([...fileDisplayNames, ...names])
-            renderIntoCanvas(files)
+            createCanvases(files)
         } else {
             console.log(validation.validationMessage)
         }
@@ -196,19 +216,14 @@ const FileUpload = () => {
 
 
     return (
-
         <>
-            {pages ? <PDFGridRender pageData={pages}/> : null}
-
+            {canvasAttributeData ? null : null}
             <h1>Yixiao's React-PDF Assignment 🚀</h1>
-
             <div className={"drag-area"} onDragOver={handleDragOver} onDropCapture={handleDrop}
                  onDragEnterCapture={handleDragEnter} onDragLeaveCapture={handleDragLeave}>
                 <form onSubmit={onSubmit} className="upload-form">
-
                     <div className="pdf_input">
                         <label htmlFor="files" className="btn">Select Files</label>
-
                         <input className="pdf_file_select"
                                accept='application/pdf'
                                type="file"
@@ -220,19 +235,15 @@ const FileUpload = () => {
                         />
                         {("draggable" in divs || ("ondragstart" in divs && "ondrop" in divs))
                             ?
-
                             <div className="pdf_dragndrop"> Or drag n drop here</div>
                             :
                             ''
                         }
-
                         <button className="pdf_button" type="submit" value='Upload'>Upload</button>
                     </div>
                 </form>
             </div>
             <br/>
-            <Message msg={fileDisplayNames}/>
-
         </>
     );
 };
