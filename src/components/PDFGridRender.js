@@ -10,9 +10,10 @@ const PDFGridRender = props => {
     const [deletes, setDeletes] = useState([])
     const [rotate, setRotate] = useState([])
 
+
     useEffect(()=>{
         setState([...state, ...props.pageData])
-        console.log(state)
+
     },[props.pageData])
 
     useEffect(()=>{
@@ -61,7 +62,6 @@ const PDFGridRender = props => {
             return obj.key !== key
         })
         setDeletes(stateArr)
-
     }
 
     const mergeData = () =>{
@@ -76,9 +76,9 @@ const PDFGridRender = props => {
 
     return (
         <div className={"col"}>
-            <ReactSortable list={state} setList={setState} animation={200} >
+            <ReactSortable list={state} setList={setState} animation={250} >
                 {state.map(doc => (
-                    <div className={"grid-square border-1px-solid"}>
+                    <div className={"grid-square border-1px-solid"} onDragEnd={()=>setState(state)} >
 
                     <div
                         key={doc.fingerprint + "-" + doc.pageNum}
