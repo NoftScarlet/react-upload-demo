@@ -12,6 +12,7 @@ const FileUpload = () => {
     const [file, setFile] = useState([]);
     const [canvasAttributeData, setCanvasAttributeData] = useState([]);
     const [fileDisplayNames, setFileDisplayNames] = useState([]);
+    const [imgData, setImgData] = useState({});
 
     useEffect(() => {
         console.log(canvasAttributeData)
@@ -22,21 +23,20 @@ const FileUpload = () => {
 
         function prepareDataForCanvas(sf, sfn) {
             let singlePageData = []
-            pdfjsLib.getDocument(sf).promise
-                .then(function (pdfDoc) {
-                    for (let i = 0; i < pdfDoc._pdfInfo.numPages; i++) {
-                        singlePageData.push({
-                            pageNum: i + 1,
-                            fingerprint: pdfDoc._pdfInfo.fingerprint,
-                            fileName: sfn,
-                            rotateDeg: 0,
-                            key: pdfDoc._pdfInfo.fingerprint + '-' + (i + 1)
-                        })
-                    }
-                    buffer = [...singlePageData]
-                    setCanvasAttributeData(buffer)
-                    return pdfDoc
-                })
+            pdfjsLib.getDocument(sf).promise.then(function (pdfDoc) {
+                for (let i = 0; i < pdfDoc._pdfInfo.numPages; i++) {
+                    singlePageData.push({
+                        pageNum: i + 1,
+                        fingerprint: pdfDoc._pdfInfo.fingerprint,
+                        fileName: sfn,
+                        rotateDeg: 0,
+                        key: pdfDoc._pdfInfo.fingerprint + '-' + (i + 1)
+                    })
+                }
+                buffer = [...singlePageData]
+                setCanvasAttributeData(buffer)
+                return pdfDoc
+            })
                 .then(function (pdfDoc) {
                     for (let i = 0; i < pdfDoc._pdfInfo.numPages; i++) {
                         pdfDoc.getPage(i + 1).then(function (_pdfPage) {
@@ -67,9 +67,10 @@ const FileUpload = () => {
         }
 
         function renderSinglePage(_page, _canvasAttr) {
+            let id = "canvas-" + _canvasAttr.fingerprint + "-" + _canvasAttr.pageNum
             let scale = 0.25;
             let viewport = _page.getViewport({scale: scale});
-            let canvas = document.getElementById("canvas-" + _canvasAttr.fingerprint + "-" + _canvasAttr.pageNum);
+            let canvas = document.getElementById(id);
             let context = canvas.getContext('2d');
             canvas.height = viewport.height;
             canvas.width = viewport.width;
@@ -81,6 +82,10 @@ const FileUpload = () => {
             };
             let renderTask = _page.render(renderContext);
             renderTask.promise.then(function () {
+                let canvas = document.getElementById(id);
+                let context = canvas.getContext("2d")
+                let imgData = context.getImageData(0, 0, canvas.width, canvas.height)
+                setImgData({key: _canvasAttr.fingerprint + "-" + _canvasAttr.pageNum, imgData: imgData})
 
             });
         }
@@ -184,7 +189,7 @@ const FileUpload = () => {
                     </div>
                 </form>
             </div>
-            {canvasAttributeData ? <PDFGridRender pageData={canvasAttributeData}/> : null}
+            {canvasAttributeData ? <PDFGridRender pageData={canvasAttributeData} imageData={imgData}/> : null}
             <br/>
         </>
     );

@@ -3,14 +3,16 @@ import {ReactSortable} from "react-sortablejs";
 import Message from "./Message";
 
 const PDFGridRender = props => {
+
     let pageAttr = props.pageData
 
-    const [state, setState] = useState(pageAttr);
+    const [state, setState] = useState(pageAttr);// Master state
     const [deletes, setDeletes] = useState([])
     const [rotate, setRotate] = useState([])
 
     useEffect(()=>{
         setState([...state, ...props.pageData])
+        console.log(state)
     },[props.pageData])
 
     useEffect(()=>{
@@ -20,6 +22,19 @@ const PDFGridRender = props => {
     useEffect(()=>{
         setState(rotate)
     },[rotate])
+
+    useEffect(()=>{
+        addImageDataToState(state,props.imageData)
+    },[props.imageData])
+
+    const addImageDataToState = (state, imageData) =>{
+        let stateArr = state;
+        let objIndex = stateArr.findIndex((obj => obj.key === imageData.key));
+        if (stateArr[objIndex] !== undefined && !("imageData" in stateArr[objIndex])) {
+            stateArr[objIndex]["imageData"] = imageData.imgData
+            setState(stateArr)
+        }
+    }
 
 
 
@@ -53,8 +68,10 @@ const PDFGridRender = props => {
 
     }
 
-    const reRender =() => {
-
+    const reRender =(imageData,id) => {
+        let canvas=document.getElementById(id)
+        let ctx = canvas.getContext('2d')
+        ctx.putImageData(imageData,0,0)
     }
 
     return (
@@ -62,20 +79,20 @@ const PDFGridRender = props => {
             <ReactSortable list={state} setList={setState} animation={200} >
                 {state.map(doc => (
                     <div className={"grid-square border-1px-solid"}>
+
                     <div
                         key={doc.fingerprint + "-" + doc.pageNum}
                         style={{transform:"rotate("+ doc.rotateDeg +"deg)"}}
                         className={"d-flex"}
                     >
-                        <canvas className={"mr-0-auto"} id={`canvas-${doc.fingerprint}-${doc.pageNum}`}>.</canvas>
-
+                        <canvas className={"mr-0-auto"} id={`canvas-${doc.fingerprint}-${doc.pageNum}` }>.</canvas>
                     </div>
                         <br/>
-                        <Message msg={doc.fileName + " -page " + doc.pageNum}/>
+                        <Message msg={doc.fileName + " -page " + doc.pageNum }/>
                         <button onClick={()=>deletePage(state,doc.key)} >delete</button>
                         <button onClick={()=>saveDeg(state,doc)} >rotate</button>
+                        {(doc.imageData === undefined) ? null: reRender(doc.imageData, `canvas-${doc.fingerprint}-${doc.pageNum}`)}
                     </div>
-
                 ))}
             </ReactSortable>
         </div>
