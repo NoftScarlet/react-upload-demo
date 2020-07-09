@@ -4,32 +4,48 @@ import Message from "./Message";
 
 const PDFGridRender = props => {
     let pageAttr = props.pageData
+
     const [state, setState] = useState(pageAttr);
     const [deletes, setDeletes] = useState([])
-
+    const [rotate, setRotate] = useState([])
 
     useEffect(()=>{
         setState([...state, ...props.pageData])
-        console.log(props.pageData)
     },[props.pageData])
 
     useEffect(()=>{
         setState(deletes)
-        console.log(deletes)
     },[deletes])
 
-    const saveDeg = (str) =>{
+    useEffect(()=>{
+        setState(rotate)
+    },[rotate])
 
-        //
+
+
+    const saveDeg = (state, doc) =>{
+        console.log(state)
+
+        let stateArr = state;
+
+        let objIndex = stateArr.findIndex((obj => obj.key === doc.key));
+        if (stateArr[objIndex].rotateDeg === 270) {
+            stateArr[objIndex].rotateDeg = 0
+        }
+        else {
+            stateArr[objIndex].rotateDeg += 90
+        }
+        setRotate(stateArr)
     }
+
 
     const deletePage = (state, key) => {
         //remove from state
-        let arr =[]
-        arr = state.filter(function (obj) {
+        let stateArr =[]
+        stateArr = state.filter(function (obj) {
             return obj.key !== key
         })
-        setDeletes(arr)
+        setDeletes(stateArr)
 
     }
 
@@ -43,17 +59,22 @@ const PDFGridRender = props => {
 
     return (
         <div className={"col"}>
-            <ReactSortable list={state} setList={setState}>
+            <ReactSortable list={state} setList={setState} animation={200} >
                 {state.map(doc => (
-                    <>
-                    <div key={doc.fingerprint + "-" + doc.pageNum} className={"grid-square"}>
-                        <canvas id={`canvas-${doc.fingerprint}-${doc.pageNum}`}>.</canvas>
-                        <Message msg={doc.fileName + " -page " + doc.pageNum}/>
-                        <button onClick={()=>saveDeg(state,doc.key)} >rotate</button>
-                        <button onClick={()=>deletePage(state,doc.key)} >delete</button>
-                    </div>
+                    <div className={"grid-square border-1px-solid"}>
+                    <div
+                        key={doc.fingerprint + "-" + doc.pageNum}
+                        style={{transform:"rotate("+ doc.rotateDeg +"deg)"}}
+                        className={"d-flex"}
+                    >
+                        <canvas className={"mr-0-auto"} id={`canvas-${doc.fingerprint}-${doc.pageNum}`}>.</canvas>
 
-                    </>
+                    </div>
+                        <br/>
+                        <Message msg={doc.fileName + " -page " + doc.pageNum}/>
+                        <button onClick={()=>deletePage(state,doc.key)} >delete</button>
+                        <button onClick={()=>saveDeg(state,doc)} >rotate</button>
+                    </div>
 
                 ))}
             </ReactSortable>

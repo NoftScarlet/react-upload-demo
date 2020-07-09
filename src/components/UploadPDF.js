@@ -30,7 +30,7 @@ const FileUpload = () => {
                             fingerprint: pdfDoc._pdfInfo.fingerprint,
                             fileName: sfn,
                             rotateDeg: 0,
-                            key: pdfDoc._pdfInfo.fingerprint+'-'+ (i + 1)
+                            key: pdfDoc._pdfInfo.fingerprint + '-' + (i + 1)
                         })
                     }
                     buffer = [...singlePageData]
@@ -42,7 +42,10 @@ const FileUpload = () => {
                         pdfDoc.getPage(i + 1).then(function (_pdfPage) {
                             renderSinglePage(
                                 _pdfPage,
-                                {pageNum: i + 1, fingerprint: pdfDoc._pdfInfo.fingerprint})
+                                {
+                                    pageNum: i + 1,
+                                    fingerprint: pdfDoc._pdfInfo.fingerprint
+                                })
                         });
                     }
                 })
@@ -64,9 +67,7 @@ const FileUpload = () => {
         }
 
         function renderSinglePage(_page, _canvasAttr) {
-            console.log(_page, _canvasAttr)
-
-            let scale = 0.4;
+            let scale = 0.25;
             let viewport = _page.getViewport({scale: scale});
             let canvas = document.getElementById("canvas-" + _canvasAttr.fingerprint + "-" + _canvasAttr.pageNum);
             let context = canvas.getContext('2d');
@@ -80,7 +81,7 @@ const FileUpload = () => {
             };
             let renderTask = _page.render(renderContext);
             renderTask.promise.then(function () {
-                console.log('Page rendered');
+
             });
         }
 
@@ -155,20 +156,13 @@ const FileUpload = () => {
         }
     };
 
-    const onSubmit = async evt => {
-        evt.preventDefault();
-        const formData = new FormData();
-        formData.append('file', file);
-    };
-
-
     return (
         <>
-            {canvasAttributeData ? <PDFGridRender pageData={canvasAttributeData}/> : null}
+
             <h1>Yixiao's React-PDF Assignment 🚀</h1>
             <div className={"drag-area"} onDragOver={handleDragOver} onDropCapture={handleDrop}
                  onDragEnterCapture={handleDragEnter} onDragLeaveCapture={handleDragLeave}>
-                <form onSubmit={onSubmit} className="upload-form">
+                <form className="upload-form">
                     <div className="pdf_input">
                         <label htmlFor="files" className="btn">Select Files</label>
                         <input className="pdf_file_select"
@@ -190,6 +184,7 @@ const FileUpload = () => {
                     </div>
                 </form>
             </div>
+            {canvasAttributeData ? <PDFGridRender pageData={canvasAttributeData}/> : null}
             <br/>
         </>
     );
