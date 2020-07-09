@@ -1,17 +1,19 @@
 import React, { useEffect, useState} from 'react';
 import {ReactSortable} from "react-sortablejs";
 import Message from "./Message";
+import CanvasPDF from "./CanvasPDF";
 
 const PDFGridRender = props => {
 
     let pageAttr = props.pageData
 
-    const [state, setState] = useState(pageAttr);// Master state
+    const [state, setState] = useState(pageAttr);// -> Master state
     const [deletes, setDeletes] = useState([])
     const [rotate, setRotate] = useState([])
 
 
     useEffect(()=>{
+        //use spread operator to append new incoming page data into master state
         setState([...state, ...props.pageData])
 
     },[props.pageData])
@@ -40,7 +42,6 @@ const PDFGridRender = props => {
 
 
     const saveDeg = (state, doc) =>{
-        console.log(state)
 
         let stateArr = state;
 
@@ -86,12 +87,16 @@ const PDFGridRender = props => {
                         className={"d-flex"}
                     >
                         <canvas className={"mr-0-auto"} id={`canvas-${doc.fingerprint}-${doc.pageNum}` }>.</canvas>
+                        {(doc.imageData === undefined) ? null: reRender(doc.imageData, `canvas-${doc.fingerprint}-${doc.pageNum}`)}
+                        {(doc.imageData === undefined) ? null:  <CanvasPDF state={state} imageData={doc.imageData} id={`canvas-${doc.fingerprint}-${doc.pageNum}`}/>}
+
+
                     </div>
                         <br/>
                         <Message msg={doc.fileName + " -page " + doc.pageNum }/>
                         <button onClick={()=>deletePage(state,doc.key)} >delete</button>
                         <button onClick={()=>saveDeg(state,doc)} >rotate</button>
-                        {(doc.imageData === undefined) ? null: reRender(doc.imageData, `canvas-${doc.fingerprint}-${doc.pageNum}`)}
+
                     </div>
                 ))}
             </ReactSortable>
