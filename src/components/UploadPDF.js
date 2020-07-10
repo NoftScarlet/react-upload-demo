@@ -67,8 +67,9 @@ const FileUpload = () => {
             let viewport = _page.getViewport({scale: scale});
             let canvas = document.getElementById(id);
             let context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
+            canvas.height = 220;
+            canvas.width = 160;
+            console.log(canvas.height)
 
             // Render PDF page into canvas context
             let renderContext = {
@@ -80,7 +81,7 @@ const FileUpload = () => {
                 let canvas = document.getElementById(id);
                 let context = canvas.getContext("2d")
                 let imgData = context.getImageData(0, 0, canvas.width, canvas.height)
-                setImgData({key: _canvasAttr.fingerprint + "-" + _canvasAttr.pageNum, imgData: imgData})
+                setImgData({key: _canvasAttr.fingerprint + "-" + _canvasAttr.pageNum, imgData: imgData, })
 
             });
         }
@@ -151,12 +152,12 @@ const FileUpload = () => {
 
     return (
         <>
-            <h1>Yixiao's React-PDF Assignment 🚀</h1>
+            <h1 className="text-align-center">Yixiao's React-PDF Assignment 🚀</h1>
             <div className={"drag-area"} onDragOver={handleDragOver} onDropCapture={handleDrop}
                  onDragEnterCapture={handleDragEnter} onDragLeaveCapture={handleDragLeave}>
                 <form className="upload-form">
                     <div className="pdf_input">
-                        <label htmlFor="files" className="btn">Select Files</label>
+                        <label htmlFor="files" className="btn btn-lg btn-info">Select Files</label>
                         <input className="pdf_file_select"
                                accept='application/pdf'
                                type="file"
@@ -172,10 +173,13 @@ const FileUpload = () => {
                             :
                             ''
                         }
+
                     </div>
                 </form>
+                {canvasAttributeData ? <PDFGridRender pageData={canvasAttributeData} imageData={imgData}/> : null}
             </div>
-            {canvasAttributeData ? <PDFGridRender pageData={canvasAttributeData} imageData={imgData}/> : null}
+
+
             <br/>
         </>
     );

@@ -9,7 +9,7 @@ export const simpleFileValidation = (files, STATIC_V) => {
 
     //check file extension type and file size
     for (let i = 0; i < files.length; i++) {
-        if (files[i].name.split('.').pop().toLowerCase() !== STATIC_V.FILE_TYPE_LIMIT) {
+        if (files[i].name.split('.').pop().toUpperCase() !== STATIC_V.FILE_TYPE_LIMIT) {
 
             return {validationResult: false, validationMessage: STATIC_V.FILE_TYPE_INVALID_MSG}
         } else if (files[i].size / 1024 / 1024 > STATIC_V.FILE_SIZE_LIMIT_MB) {

@@ -5,7 +5,7 @@ const Message = (props) => {
     return (
         <>
             {
-                <div>{props.msg}</div>
+                <div className="position-absolute text-wrap">{props.msg}</div>
             }
         </>
     );

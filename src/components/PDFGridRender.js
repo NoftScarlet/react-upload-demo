@@ -70,33 +70,35 @@ const PDFGridRender = props => {
 
     return (
         <div>
-            <button onClick={() => console.log(mergeData(state))}>Console.log Upload Options</button>
+            <button className={"btn-console btn btn-lg btn-secondary"} onClick={() => console.log(mergeData(state))}>Upload (console)</button>
 
-            <div className={"col"}>
                 <ReactSortable list={state} setList={setState} animation={250}>
                     {state.map(doc => (
-                        <div className={"grid-square border-1px-solid"}>
+                        <div className={"grid-square border-1px-solid reveal"} key={doc.fingerprint + "-" + doc.pageNum +"grid-key"}>
+
+
                             <div
                                 key={doc.fingerprint + "-" + doc.pageNum}
-                                style={{transform: "rotate(" + doc.rotateDeg + "deg)"}}
+
                                 className={"d-flex"}
                             >
-                                <canvas className={"mr-0-auto border-1px-solid"} id={`canvas-${doc.fingerprint}-${doc.pageNum}`}>.
+                                <canvas className={"mr-0-auto"} id={`canvas-${doc.fingerprint}-${doc.pageNum}`} style={{transform: "rotate(" + doc.rotateDeg + "deg)"}}>.
                                 </canvas>
                                 {(doc.imageData === undefined) ? null : reRender(doc.imageData, `canvas-${doc.fingerprint}-${doc.pageNum}`)}
                                 {(doc.imageData === undefined) ? null :
                                     <CanvasPDF state={state} imageData={doc.imageData}
                                                id={`canvas-${doc.fingerprint}-${doc.pageNum}`}/>}
                             </div>
+                            <Message msg={doc.fileName + " - page " + doc.pageNum}/>
                             <br/>
-                            <Message msg={doc.fileName + " -page " + doc.pageNum}/>
-                            <button onClick={() => deletePage(state, doc.key)}>Delete</button>
-                            <button onClick={() => rotatePage(state, doc)}>Rotate Clockwise</button>
+                            <button className="w-50 btn btn-danger rounded-0 " onClick={() => deletePage(state, doc.key)}>Delete</button>
+                            <button className="w-50 btn btn-info rounded-0 " onClick={() => rotatePage(state, doc)}>Rotate Clockwise</button>
+
 
                         </div>
                     ))}
                 </ReactSortable>
-            </div>
+
         </div>
     );
 };
