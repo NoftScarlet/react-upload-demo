@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {simpleFileValidation, classSafeStr} from '../static/utility';
+import {simpleFileValidation} from '../static/utility';
 import * as STATIC_V from '../static/StaticValuesPDF';
 import * as pdfjsLib from 'pdfjs-dist/es5/build/pdf'
 import PDFGridRender from "./PDFGridRender";
@@ -9,14 +9,9 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdn.jsdelivr.net/npm/pdfjs-dist@2.4.
 const FileUpload = () => {
 
     const divs = document.createElement('div');
-    const [file, setFile] = useState([]);
     const [canvasAttributeData, setCanvasAttributeData] = useState([]);
     const [fileDisplayNames, setFileDisplayNames] = useState([]);
     const [imgData, setImgData] = useState({});
-
-    useEffect(() => {
-        console.log(canvasAttributeData)
-    })
 
     const createCanvases = async (docs) => {
         let buffer = [];
@@ -102,36 +97,29 @@ const FileUpload = () => {
 
     const handleDragEnter = e => {
         e.preventDefault()
-        console.log("enter")
     }
 
     const handleDragLeave = e => {
         e.preventDefault()
-        console.log("leave")
     }
 
     const handleDrop = e => {
-        console.log("handle Drop")
         e.preventDefault();
         let files = [];
-
         if (e.dataTransfer.items) {
             // Use DataTransferItemList interface to access the file(s)
             for (let i = 0; i < e.dataTransfer.items.length; i++) {
                 // If dropped items aren't files, reject them
                 if (e.dataTransfer.items[i].kind === 'file') {
                     files.push(e.dataTransfer.items[i].getAsFile());
-
                 }
             }
         } else {
             // Use DataTransfer interface to access the file(s)
             for (let i = 0; i < e.dataTransfer.files.length; i++) {
                 files.push(e.dataTransfer.files[i])
-
             }
         }
-
         let validation = simpleFileValidation(files, STATIC_V)
         if (validation.validationResult) {
             let names = [];
@@ -163,7 +151,6 @@ const FileUpload = () => {
 
     return (
         <>
-
             <h1>Yixiao's React-PDF Assignment 🚀</h1>
             <div className={"drag-area"} onDragOver={handleDragOver} onDropCapture={handleDrop}
                  onDragEnterCapture={handleDragEnter} onDragLeaveCapture={handleDragLeave}>
@@ -185,7 +172,6 @@ const FileUpload = () => {
                             :
                             ''
                         }
-                        <button className="pdf_button" type="submit" value='Upload'>Upload</button>
                     </div>
                 </form>
             </div>
@@ -194,8 +180,5 @@ const FileUpload = () => {
         </>
     );
 };
-{/*// eslint-disable-next-line import/no-webpack-loader-syntax
-//import PDFJSWorker from "worker-loader!pdfjs-dist/build/pdf.worker.js";
-//pdfjsLib.GlobalWorkerOptions.workerPort = new PDFJSWorker();*/
-}
+
 export default FileUpload;

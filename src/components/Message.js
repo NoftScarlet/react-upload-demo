@@ -14,5 +14,4 @@ const Message = (props) => {
 Message.propTypes = {
     msg: PropTypes.string.isRequired
 };
-
 export default Message;

@@ -12,14 +12,12 @@ const CanvasPDF = props => {
     }
 
     useEffect(()=>{
-        console.log("state change")
         reRender(props.imageData,props.id)
     },[props.state])
 
     return (
-        <h1>
-            {}
-        </h1>
+        <>
+        </>
     )
 
 }

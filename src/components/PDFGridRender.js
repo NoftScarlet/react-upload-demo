@@ -1,36 +1,35 @@
-import React, { useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {ReactSortable} from "react-sortablejs";
 import Message from "./Message";
 import CanvasPDF from "./CanvasPDF";
+import {getOptions} from "../static/utility"
 
 const PDFGridRender = props => {
 
     let pageAttr = props.pageData
-
     const [state, setState] = useState(pageAttr);// -> Master state
     const [deletes, setDeletes] = useState([])
     const [rotate, setRotate] = useState([])
 
-
-    useEffect(()=>{
+    useEffect(() => {
         //use spread operator to append new incoming page data into master state
         setState([...state, ...props.pageData])
 
-    },[props.pageData])
+    }, [props.pageData])
 
-    useEffect(()=>{
+    useEffect(() => {
         setState(deletes)
-    },[deletes])
+    }, [deletes])
 
-    useEffect(()=>{
+    useEffect(() => {
         setState(rotate)
-    },[rotate])
+    }, [rotate])
 
-    useEffect(()=>{
-        addImageDataToState(state,props.imageData)
-    },[props.imageData])
+    useEffect(() => {
+        addImageDataToState(state, props.imageData)
+    }, [props.imageData])
 
-    const addImageDataToState = (state, imageData) =>{
+    const addImageDataToState = (state, imageData) => {
         let stateArr = state;
         let objIndex = stateArr.findIndex((obj => obj.key === imageData.key));
         if (stateArr[objIndex] !== undefined && !("imageData" in stateArr[objIndex])) {
@@ -39,67 +38,65 @@ const PDFGridRender = props => {
         }
     }
 
-
-
-    const saveDeg = (state, doc) =>{
-
+    const rotatePage = (state, doc) => {
         let stateArr = state;
-
         let objIndex = stateArr.findIndex((obj => obj.key === doc.key));
         if (stateArr[objIndex].rotateDeg === 270) {
             stateArr[objIndex].rotateDeg = 0
-        }
-        else {
+        } else {
             stateArr[objIndex].rotateDeg += 90
         }
         setRotate(stateArr)
     }
 
-
     const deletePage = (state, key) => {
         //remove from state
-        let stateArr =[]
+        let stateArr = []
         stateArr = state.filter(function (obj) {
             return obj.key !== key
         })
         setDeletes(stateArr)
     }
 
-    const mergeData = () =>{
-
+    const mergeData = (state) => {
+        return getOptions(state)
     }
 
-    const reRender =(imageData,id) => {
-        let canvas=document.getElementById(id)
+    const reRender = (imageData, id) => {
+        let canvas = document.getElementById(id)
         let ctx = canvas.getContext('2d')
-        ctx.putImageData(imageData,0,0)
+        ctx.putImageData(imageData, 0, 0)
     }
 
     return (
-        <div className={"col"}>
-            <ReactSortable list={state} setList={setState} animation={250} >
-                {state.map(doc => (
-                    <div className={"grid-square border-1px-solid"} onDragEnd={()=>setState(state)} >
+        <div>
+            <button onClick={() => console.log(mergeData(state))}>Console.log Upload Options</button>
 
-                    <div
-                        key={doc.fingerprint + "-" + doc.pageNum}
-                        style={{transform:"rotate("+ doc.rotateDeg +"deg)"}}
-                        className={"d-flex"}
-                    >
-                        <canvas className={"mr-0-auto"} id={`canvas-${doc.fingerprint}-${doc.pageNum}` }>.</canvas>
-                        {(doc.imageData === undefined) ? null: reRender(doc.imageData, `canvas-${doc.fingerprint}-${doc.pageNum}`)}
-                        {(doc.imageData === undefined) ? null:  <CanvasPDF state={state} imageData={doc.imageData} id={`canvas-${doc.fingerprint}-${doc.pageNum}`}/>}
+            <div className={"col"}>
+                <ReactSortable list={state} setList={setState} animation={250}>
+                    {state.map(doc => (
+                        <div className={"grid-square border-1px-solid"}>
+                            <div
+                                key={doc.fingerprint + "-" + doc.pageNum}
+                                style={{transform: "rotate(" + doc.rotateDeg + "deg)"}}
+                                className={"d-flex"}
+                            >
+                                <canvas className={"mr-0-auto border-1px-solid"} id={`canvas-${doc.fingerprint}-${doc.pageNum}`}>.
+                                </canvas>
+                                {(doc.imageData === undefined) ? null : reRender(doc.imageData, `canvas-${doc.fingerprint}-${doc.pageNum}`)}
+                                {(doc.imageData === undefined) ? null :
+                                    <CanvasPDF state={state} imageData={doc.imageData}
+                                               id={`canvas-${doc.fingerprint}-${doc.pageNum}`}/>}
+                            </div>
+                            <br/>
+                            <Message msg={doc.fileName + " -page " + doc.pageNum}/>
+                            <button onClick={() => deletePage(state, doc.key)}>Delete</button>
+                            <button onClick={() => rotatePage(state, doc)}>Rotate Clockwise</button>
 
-
-                    </div>
-                        <br/>
-                        <Message msg={doc.fileName + " -page " + doc.pageNum }/>
-                        <button onClick={()=>deletePage(state,doc.key)} >delete</button>
-                        <button onClick={()=>saveDeg(state,doc)} >rotate</button>
-
-                    </div>
-                ))}
-            </ReactSortable>
+                        </div>
+                    ))}
+                </ReactSortable>
+            </div>
         </div>
     );
 };
