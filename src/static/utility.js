@@ -45,7 +45,7 @@ export const getOptions = (resultArray) => {
 
         //if fileMap doesn't have this file, add it in
         if (values.indexOf(resultArray[i].fileName) === -1) {
-            fileMap[keys.length.toString()] = resultArray[i].fileName
+            fileMap[keys.length] = resultArray[i].fileName
         }
 
 
